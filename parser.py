@@ -1,12 +1,17 @@
 import json
 from datetime import datetime, timedelta
 
+current_draft_order = 0
+
 class Player():
     def __init__(self, name):
+        global current_draft_order
         self.name = name
+        self.draft_order = current_draft_order + 1
         self.timestamps = []
         self.delays = []
         self.total_delay = timedelta(seconds=0)
+        current_draft_order += 1
 
     def add_timestamp(self, timestamp):
         self.timestamps.append(timestamp)
@@ -53,7 +58,7 @@ def remove_decimal_from_timestamp(timestamp: str):
     plus_index = timestamp.find("+")
     end_index = len(timestamp)
     new_timestamp = timestamp[0: dot_index] + timestamp[plus_index: end_index]
-    print(new_timestamp)
+    #print(new_timestamp)
     return new_timestamp
 
 def convert_timestamp(timestamp: str):
@@ -65,12 +70,10 @@ def convert_timestamp(timestamp: str):
 def add_timestamp_to_drafter(message: dict, player_name: str):
     if player_name in players.keys():
         player = players[player_name]
-        print(player_name + " already exists")
     else:
         player = Player(player_name)
         players[player_name] = player
-        print(player_name + " not found")
-    print ("Adding " + message["timestamp"] + " to drafter " + player_name)
+    #print ("Adding " + message["timestamp"] + " to drafter " + player_name)
     timestamp_str = message["timestamp"]
 
     player.add_timestamp(convert_timestamp(timestamp_str))
@@ -83,9 +86,6 @@ def add_delay_to_drafter(drafter: str):
         previous_draft_time = current_draft_time
     else:
         diff = current_draft_time - previous_draft_time
-        # print(current_draft_time)
-        # print(previous_draft_time)
-        # print(diff)
         player.add_delay(diff)
         previous_draft_time = current_draft_time
         
@@ -94,14 +94,48 @@ def parse_message(message: dict):
     drafter = get_current_drafter(message)
     add_timestamp_to_drafter(message, drafter)
     add_delay_to_drafter(drafter)
-    print(drafter)
+
+def compare_top_bottom(players_list: list, drop_slowest_n=0):
+    top_list = []
+    bottom_list = []
+    for player in players_list:
+        if player.draft_order <= 10:
+            top_list.append(player)
+        else:
+            bottom_list.append(player)
+    top_list.sort()
+    bottom_list.sort()
+    for _ in range(0, drop_slowest_n):
+        top_list.pop()
+        bottom_list.pop()
+
+    # There's some fancy one-liner in python to do this but I'm tired and lazy
+    top_total = timedelta(seconds=0)
+    for t_player in top_list:
+        top_total += t_player.total_delay
+    bot_total = timedelta(seconds=0)
+    for b_player in bottom_list:
+        bot_total += b_player.total_delay
+    
+    top_avg = top_total/len(top_list)
+    bot_avg = bot_total/len(bottom_list)
+
+    print("Top players: {0}, total: {1}, avg: {2} \nBottom players: {3}, total: {4}, avg: {5}".format(
+        len(top_list),
+        top_total, 
+        top_avg, 
+        len(bottom_list),
+        bot_total, 
+        bot_avg))
 
 def print_info():
     players_list = [player for player in players.values()]
     players_list.sort()
     players_list.reverse()
     for player in players_list:
-        print("{0}: {1}, {2}".format(player.name, player.total_delay, [str(delta) for delta in player.delays]))
+        #print("{0}({1}): {2}, {3}".format(player.name, player.draft_order, player.total_delay, [str(delta) for delta in player.delays]))
+        print("{0}({1}): {2}".format(player.name, player.draft_order, player.total_delay))
+    compare_top_bottom(players_list)
     
 def main():
     data = get_data()
