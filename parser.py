@@ -111,22 +111,34 @@ def compare_top_bottom(players_list: list, drop_slowest_n=0):
 
     # There's some fancy one-liner in python to do this but I'm tired and lazy
     top_total = timedelta(seconds=0)
+    top_pick_count = 0
     for t_player in top_list:
         top_total += t_player.total_delay
+        top_pick_count += len(t_player.delays)
     bot_total = timedelta(seconds=0)
+    bot_pick_count = 0
     for b_player in bottom_list:
         bot_total += b_player.total_delay
+        bot_pick_count += len(b_player.delays)
     
     top_avg = top_total/len(top_list)
     bot_avg = bot_total/len(bottom_list)
 
-    print("Top players: {0}, total: {1}, avg: {2} \nBottom players: {3}, total: {4}, avg: {5}".format(
+    top_avg_per_pick = top_total/top_pick_count
+    bot_avg_per_pick = bot_total/bot_pick_count
+
+    print("Top players: {0}, total time: {1}, time/player: {2}, picks: {3}, time/pick: {4} \n\
+Bottom players: {5}, total time : {6}, time/player: {7}, picks: {8}, time/pick {9}".format(
         len(top_list),
         top_total, 
         top_avg, 
+        top_pick_count,
+        top_avg_per_pick,
         len(bottom_list),
         bot_total, 
-        bot_avg))
+        bot_avg,
+        bot_pick_count,
+        bot_avg_per_pick))
 
 def print_info():
     players_list = [player for player in players.values()]
