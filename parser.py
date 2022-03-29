@@ -147,7 +147,7 @@ def print_info():
     for player in players_list:
         #print("{0}({1}): {2}, {3}".format(player.name, player.draft_order, player.total_delay, [str(delta) for delta in player.delays]))
         print("{0}({1}): {2}".format(player.name, player.draft_order, player.total_delay))
-    compare_top_bottom(players_list)
+    #compare_top_bottom(players_list)
     
 def main():
     data = get_data()
